@@ -1,9 +1,6 @@
-package com.junenatte.hadoop.predemo;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -11,33 +8,38 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 
-public class WordCountTest {
+public class WeatherTest {
     public static void main(String[] args) {
         Configuration conf=new Configuration();
         try{
             FileSystem hdfs= FileSystem.get(conf);
-            Path dst=new Path("/main/wordcount_output/");
+            Path dst=new Path("/main/weather_output/");
             if(hdfs.exists(dst))
                 hdfs.delete(dst,true);
             Job job=Job.getInstance(conf);
-            job.setJarByClass(WordCountTest.class);
+            job.setJarByClass(WeatherTest.class);
             job.setInputFormatClass(TextInputFormat.class);
-            TextInputFormat.setInputPaths(job,"/main/sjh/*.txt");
-            job.setMapperClass(WordCountMapper.class);
-            job.setMapOutputKeyClass(Text.class);
-            job.setMapOutputValueClass(IntWritable.class);
-            job.setReducerClass(WordReducer.class);
+            TextInputFormat.setInputPaths(job,"/main/sjh/weather.txt");
+
+            job.setMapperClass(WeatherMapper.class);
+            job.setMapOutputKeyClass(Weather.class);
+            job.setMapOutputValueClass(Text.class);
+
+            job.setPartitionerClass(WeatherPartitioner.class);
+            job.setNumReduceTasks(3);
+
+            job.setGroupingComparatorClass(WeatherGroup.class);
+            job.setSortComparatorClass(WeatherSortByDegreeDESC.class);
+
+            job.setReducerClass(WeatherReducerWithDetail.class);
             job.setOutputFormatClass(TextOutputFormat.class);
-            job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(IntWritable.class);
+            job.setOutputKeyClass(Weather.class);
+            job.setOutputValueClass(Text.class);
             TextOutputFormat.setOutputPath(job,dst);
             boolean b=job.waitForCompletion(true);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (InterruptedException | IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+
     }
 }
