@@ -42,7 +42,7 @@ public class WordCountTest {
             Path dst2 = new Path("/main/wordcountsorted_output/");
             if (hdfs.exists(dst2))
                 hdfs.delete(dst2, true);
-            Job job2 = new Job();
+            Job job2 = Job.getInstance(conf);
 
             job2.setJarByClass(WordCountTest.class);
 
